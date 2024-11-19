@@ -50,7 +50,7 @@ program
   .command("start")
   .description("Start the project")
   .action(async options => {
-    await start(options, env)
+    await start(options, config)
   })
 
 program
@@ -65,7 +65,7 @@ program
   .description("Restart the project")
   .action(async () => {
     await stop()
-    await start({}, env)
+    await start({}, config)
   })
 
 program

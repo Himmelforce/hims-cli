@@ -4,12 +4,12 @@ import process from "process"
 
 const current_directory = process.cwd()
 
-export default async (flags, env) => {
+export default async (flags, config) => {
   let command = "docker-compose --env-file .env --env-file .hims.env up -d --wait traefik"
 
   console.log(colorize("Starting the HiMS development version setup...", "blue"))
-
-  switch (env.get("ENVIRONMENT")) {
+  
+  switch (config.get("ENVIRONMENT")) {
     case "development":
       command =
         "docker-compose --env-file .env --env-file .hims.env -f docker-compose.yml -f docker-compose.development.yml up --watch -d --wait traefik"
