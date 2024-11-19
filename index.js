@@ -1,147 +1,140 @@
 #!/usr/bin/env node
 
-const fs = require("fs")
-const path = require("path")
-const process = require("process")
+import { Command } from "commander"
+import { readFileSync, existsSync, writeFileSync } from "fs"
+import path from "path"
 
-const directory = process.cwd()
+import init from "#commands/init"
+import start from "#commands/start"
+import stop from "#commands/stop"
 
-process.on("SIGINT", () => {
-  console.log("Process interrupted. Exiting...")
-  shutdown()
-})
+const package_json = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf-8"))
+const { version } = package_json
 
-process.on("SIGTERM", () => {
-  console.log("Process terminated. Exiting...")
-  shutdown()
-})
+const current_directory = process.cwd()
 
-process.on("uncaughtException", err => {
-  console.error("Uncaught Exception:", err)
-  process.exit(1)
-})
+const program = new Command()
 
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason)
-  process.exit(1)
-})
+const env_path = path.join(current_directory, ".env")
+const config_path = path.join(current_directory, ".hims.env")
 
-const commands = {
-  init: require("./scripts/init"),
-  start: require("./scripts/start"),
-  stop: require("./scripts/stop"),
-  help: require("./scripts/help"),
-  purge: require("./scripts/purge"),
-  test: require("./scripts/test")
-}
+const env = existsSync(env_path)
+  ? new Map(
+      readFileSync(env_path, "utf-8")
+        .split("\n")
+        .filter(line => line.trim() && line.includes("="))
+        .map(line => line.split("="))
+    )
+  : new Map()
 
-const close = require(`./lib/input`).close
+const config = existsSync(config_path)
+  ? new Map(
+      readFileSync(config_path, "utf-8")
+        .split("\n")
+        .filter(line => line.trim() && line.includes("="))
+        .map(line => line.split("="))
+    )
+  : new Map()
 
-const args = process.argv.slice(2)
+program.name("hims").description("Himmelforce Management System CLI tool").version(version)
 
-const flags = {}
+program
+  .command("init")
+  .description("Initialize a new project")
+  .option("-d, --default", "Defazlt configuration")
+  .action(async options => {
+    await init(options)
+  })
 
-args.filter(arg => {
-  if (arg.startsWith("-")) {
-    const [flag, value] = arg.split("=")
-    flags[flag.replace(/^--/, "")] = value || true
-    return false
-  }
-  return true
-})
+program
+  .command("start")
+  .description("Start the project")
+  .action(async options => {
+    await start(options, env)
+  })
 
-const check_docker = async () => {
-  try {
-    await require("child_process").execSync("docker -v", { stdio: "ignore" })
-  } catch (error) {
-    console.error("Docker is required to run this script.")
-    process.exit(1)
-  }
-}
+program
+  .command("stop")
+  .description("Stop the project")
+  .action(async () => {
+    await stop()
+  })
 
-const main = async () => {
-  check_docker()
+program
+  .command("restart")
+  .description("Restart the project")
+  .action(async () => {
+    await stop()
+    await start({}, env)
+  })
 
-  const hims_env = new Map()
-  const hims_env_path = path.resolve(directory, ".hims.env")
-
-  if (fs.existsSync(hims_env_path)) {
-    const env_file = fs.readFileSync(hims_env_path, "utf8")
-    env_file.split("\n").forEach(line => {
-      const [key, value] = line.split("=")
-      if (key && value) {
-        hims_env.set(key, value)
-      }
-    })
-  }
-
-  const env = new Map()
-  const env_path = path.resolve(directory, ".env")
-
-  if (fs.existsSync(env_path)) {
-    const env_file = fs.readFileSync(env_path, "utf8")
-    env_file.split("\n").forEach(line => {
-      const [key, value] = line.split("=")
-      if (key && value) {
-        env.set(key, value)
-      }
-    })
-  }
-
-  try {
-    switch (args[0]) {
-      case "init":
-        await commands.init(flags)
-        break
-      case "start":
-        await commands.start(flags, hims_env)
-        break
-      case "stop":
-        await commands.stop(flags)
-        break
-      case "help":
-        await commands.help(flags)
-        break
-      case "--help":
-        await commands.help(flags)
-      case "-h":
-        await commands.help(flags)
-        break
-      case "purge":
-        await commands.purge(flags)
-        break
-      case "test":
-        await commands.test(flags)
-        break
-      case "set_config":
-        hims_env.set(args[1], args[2])
-        fs.writeFileSync(
-          hims_env_path,
-          Array.from(hims_env)
+program
+  .command("config")
+  .description("Manage the project configuration")
+  .addCommand(
+    new Command("set")
+      .description("Set a project configuration value")
+      .argument("<key>", "Key to set")
+      .argument("<value>", "Value to set")
+      .action((key, value) => {
+        config.set(key.toUpperCase(), value)
+        const updatedConfig = [...config].reduce((acc, [key, value]) => {
+          acc[key] = value
+          return acc
+        }, {})
+        writeFileSync(
+          config_path,
+          Object.entries(updatedConfig)
             .map(([key, value]) => `${key}=${value}`)
             .join("\n")
         )
-        break
-      case "get_env":
-        console.log(env.get(args[1]))
-        break
-      case undefined:
-        console.log("No command provided!")
-        break
-      default:
-        console.log(`Unknown command: ${args[0]}`)
-        break
-    }
-  } catch (error) {
-    console.error(error)
-  } finally {
-    await shutdown()
-  }
-}
+        console.log(`Configuration updated: ${key}=${value}`)
+      })
+  )
+  .addCommand(
+    new Command("get")
+      .description("Get a project configuration value")
+      .argument("<key>", "Key to get")
+      .action(key => {
+        console.log(config.get(key.toUpperCase()))
+      })
+  )
 
-const shutdown = async () => {
-  close()
-  process.exit(0)
-}
+program
+  .command("env")
+  .description("Manage the project environment")
+  .addCommand(
+    new Command("show").description("Show the project environment").action(() => {
+      console.log(env)
+    })
+  )
+  .addCommand(
+    new Command("set")
+      .description("Set a project environment value")
+      .argument("<key>", "Key to set")
+      .argument("<value>", "Value to set")
+      .action((key, value) => {
+        env.set(key.toUpperCase(), value)
+        const updatedEnv = [...env].reduce((acc, [key, value]) => {
+          acc[key] = value
+          return acc
+        }, {})
+        writeFileSync(
+          env_path,
+          Object.entries(updatedEnv)
+            .map(([key, value]) => `${key}=${value}`)
+            .join("\n")
+        )
+        console.log(`Environment updated: ${key}=${value}`)
+      })
+  )
+  .addCommand(
+    new Command("get")
+      .description("Get a project environment value")
+      .argument("<key>", "Key to get")
+      .action(key => {
+        console.log(env.get(key.toUpperCase()))
+      })
+  )
 
-main()
+program.parse(process.argv)
