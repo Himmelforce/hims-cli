@@ -1,0 +1,11 @@
+{
+  "name": "hims",
+  "version": "1.0.13",
+  "description": "A CLI for managing the HiMS project",
+  "bin": {
+    "hims": "./index.js"
+  },
+  "scripts": {},
+  "author": "Himmelforce",
+  "license": "MIT"
+}
