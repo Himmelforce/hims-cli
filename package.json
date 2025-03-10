@@ -1,6 +1,6 @@
 {
   "name": "hims",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "A CLI for managing the HiMS project",
   "type": "module",
   "bin": {
