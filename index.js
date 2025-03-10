@@ -3,13 +3,25 @@
 import { Command } from "commander"
 import { readFileSync, existsSync, writeFileSync } from "fs"
 import path from "path"
+import process from "process"
 
 import init from "#commands/init"
 import start from "#commands/start"
 import stop from "#commands/stop"
+import help from "#commands/help"
 
 const package_json = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf-8"))
 const { version } = package_json
+
+process.on("SIGINT", () => {
+  console.log("Process interrupted. Exiting...")
+  shutdown()
+})
+
+process.on("SIGTERM", () => {
+  console.log("Process terminated. Exiting...")
+  shutdown()
+})
 
 const current_directory = process.cwd()
 
@@ -47,14 +59,21 @@ program
   })
 
 program
-  .command("start")
+  .command("up")
   .description("Start the project")
   .action(async options => {
     await start(options, config)
   })
 
 program
-  .command("stop")
+  .command("help")
+  .description("Help command")
+  .action(async options => {
+    await help()
+  })
+
+program
+  .command("down")
   .description("Stop the project")
   .action(async () => {
     await stop()
