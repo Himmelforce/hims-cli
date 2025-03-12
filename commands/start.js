@@ -28,11 +28,11 @@ export default async (flags, config) => {
   switch (config.get("ENVIRONMENT")) {
     case "development":
       start_command =
-        "docker-compose --env-file .env --env-file .hims.env -f docker-compose.yml -f docker-compose.development.yml up -d --wait traefik"
+        "docker compose --env-file .env --env-file .hims.env -f docker-compose.yml -f docker-compose.development.yml up -d --wait traefik"
       break
     case "production":
       start_command =
-        "docker-compose --env-file .env --env-file .hims.env -f docker-compose.yml -f docker-compose.production.yml up -d --wait traefik"
+        "docker compose --env-file .env --env-file .hims.env -f docker-compose.yml -f docker-compose.production.yml up -d --wait traefik"
       break
   }
 
