@@ -26,10 +26,10 @@ export default async (flags, config) => {
   console.log(colorize("Starting the HiMS development version setup...", "blue"))
 
   const development_path = config.get("DOCKER_COMPOSE_DEVELOPMENT_PATH")
-  const development_path_in_config = development_path ? developmentPath.split(",") : []
+  const development_path_in_config = development_path ? development_path.split(",") : []
 
   const production_path = config.get("DOCKER_COMPOSE_PRODUCTION_PATH")
-  const production_path_in_config = production_path ? productionPath.split(",") : []
+  const production_path_in_config = production_path ? production_path.split(",") : []
 
   switch (config.get("ENVIRONMENT")) {
     case "development":
