@@ -16,6 +16,15 @@ export default async options => {
 
   const config = {}
 
+  if (!options.default) {
+    const default_configuration = await input(
+      colorize("Do you want to create a default configuration? (y/N): ", "blue"),
+      "n"
+    )
+    if (["yes", "y"].includes(default_configuration.trim().toLowerCase())) options.default = true
+    else options.default = false
+  }
+
   if (options.default) {
     config.project_name = options.project_name || "Simple HiMS App"
     config.project_description = "A simple HiMS app created with the HiMS CLI"
@@ -48,6 +57,14 @@ export default async options => {
     config.security_mode = await input("Security mode", "insecure")
     config.host = await input("Host", "localhost")
     config.admin_path = await input("Admin path", "admin")
+    config.docker_compose_development_path = await input(
+      "Docker compose development path (comma separated, leave empty for default)",
+      ""
+    )
+    config.docker_compose_production_path = await input(
+      "Docker compose production path (comma separated, leave empty for default)",
+      ""
+    )
   }
 
   const configPath = `${current_directory}/.hims.env`

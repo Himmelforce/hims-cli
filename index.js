@@ -53,7 +53,7 @@ program.name("hims").description("Himmelforce Management System CLI tool").versi
 program
   .command("init")
   .description("Initialize a new project")
-  .option("-d, --default", "Defazlt configuration")
+  .option("-d, --default", "Default configuration")
   .action(async options => {
     await init(options)
   })

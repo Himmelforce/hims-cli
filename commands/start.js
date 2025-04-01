@@ -25,14 +25,19 @@ export default async (flags, config) => {
   let start_command = "docker-compose --env-file .env --env-file .hims.env up -d --wait traefik"
   console.log(colorize("Starting the HiMS development version setup...", "blue"))
 
+  const development_path_in_config = config.get("DOCKER_COMPOSE_DEVELOPMENT_PATH").split(",") || []
+  const production_path_in_config = config.get("DOCKER_COMPOSE_PRODUCTION_PATH").split(",") || []
+
   switch (config.get("ENVIRONMENT")) {
     case "development":
-      start_command =
-        "docker compose --env-file .env --env-file .hims.env -f docker-compose.yml -f docker-compose.development.yml up -d --wait traefik"
+      start_command = `docker compose --env-file .env --env-file .hims.env -f docker-compose.yml ${
+        development_path_in_config.length > 0 ? `-f ${development_path_in_config.join(" -f ")}` : ""
+      } up -d --wait traefik`
       break
     case "production":
-      start_command =
-        "docker compose --env-file .env --env-file .hims.env -f docker-compose.yml -f docker-compose.production.yml up -d --wait traefik"
+      start_command = `docker compose --env-file .env --env-file .hims.env -f docker-compose.yml ${
+        production_path_in_config.length > 0 ? `-f ${production_path_in_config.join(" -f ")}` : ""
+      } up -d --wait traefik`
       break
   }
 
