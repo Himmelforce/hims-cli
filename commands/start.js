@@ -25,8 +25,11 @@ export default async (flags, config) => {
   let start_command = "docker-compose --env-file .env --env-file .hims.env up -d --wait traefik"
   console.log(colorize("Starting the HiMS development version setup...", "blue"))
 
-  const development_path_in_config = config.get("DOCKER_COMPOSE_DEVELOPMENT_PATH").split(",") || []
-  const production_path_in_config = config.get("DOCKER_COMPOSE_PRODUCTION_PATH").split(",") || []
+  const development_path = config.get("DOCKER_COMPOSE_DEVELOPMENT_PATH")
+  const development_path_in_config = development_path ? developmentPath.split(",") : []
+
+  const production_path = config.get("DOCKER_COMPOSE_PRODUCTION_PATH")
+  const production_path_in_config = production_path ? productionPath.split(",") : []
 
   switch (config.get("ENVIRONMENT")) {
     case "development":
