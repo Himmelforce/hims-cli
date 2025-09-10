@@ -41,6 +41,9 @@ export default async options => {
     config.security_mode = "insecure"
     config.host = "localhost"
     config.admin_path = "admin"
+    config.api_url = "http://localhost:3002"
+    config.docker_compose_development_path = "docker-compose.development.yml"
+    config.docker_compose_production_path = "docker-compose.production.yml"
   } else {
     config.project_name = await input("Project name", "Simple HiMS App")
     config.project_description = await input("Project description", "A simple HiMS app created with the HiMS CLI")
@@ -59,11 +62,11 @@ export default async options => {
     config.admin_path = await input("Admin path", "admin")
     config.docker_compose_development_path = await input(
       "Docker compose development path (comma separated, leave empty for default)",
-      ""
+      "docker-compose.development.yml"
     )
     config.docker_compose_production_path = await input(
       "Docker compose production path (comma separated, leave empty for default)",
-      ""
+      "docker-compose.production.yml"
     )
   }
 
